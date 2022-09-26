@@ -8,7 +8,7 @@ use clap::Parser;
 static DEFAULT_BS: usize = 512;
 
 /// A Rust implementation of the Linux dd utility.
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[clap(name = "dd")]
 #[clap(version, author)]
 #[clap(about = "A Rust implementation of the Linux dd utility.")]

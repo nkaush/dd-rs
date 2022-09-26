@@ -6,5 +6,11 @@ authors = ["Neil Kaushikkar <neil.kaushikkar@gmail.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1
+
 [dependencies]
 clap = { version = "3.2.22", features = ["derive"] }
