@@ -29,9 +29,9 @@ impl Metrics {
     }
 
     pub fn block_in(&mut self, copied: usize) {
+        self.bytes_copied += copied;
         if copied == self.input_block_size {
             self.full_blocks_in += 1;
-            self.bytes_copied += copied;
         } else {
             self.partial_block_in = true;
         }

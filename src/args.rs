@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use std::io;
 use clap::Parser;
 
+// TODO: https://stackoverflow.com/questions/37223741/how-can-i-take-input-from-either-stdin-or-a-file-if-i-cannot-seek-stdin
+
 static DEFAULT_BS: usize = 512;
 
 /// A Rust implementation of the Linux dd utility.
