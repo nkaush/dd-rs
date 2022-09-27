@@ -1,18 +1,19 @@
-use signal_hook::iterator::SignalsInfo;
-use signal_hook::{consts::SIGINT, consts::SIGUSR1, iterator::Signals};
+use dd_rs::{Metrics, MetricsSnapshot, Arguments, GenericInput, GenericOutput};
 use std::sync::{Arc, atomic::AtomicBool, atomic::Ordering};
 use std::io::{Read, Seek, Write, SeekFrom, Error};
-use dd_rs::{Metrics, Arguments, Input, Output};
+use signal_hook::iterator::{Signals, SignalsInfo};
+use signal_hook::consts::{SIGINT, SIGUSR1};
 use clap::Parser;
 use std::thread;
 
 type ExitCondition = Box<dyn Fn(usize, usize) -> bool>;
+type Flag = Arc<AtomicBool>;
 
-fn signal_handler(mut signals: SignalsInfo, got_sigusr1: Arc<AtomicBool>, got_sigint: Arc<AtomicBool>) {
+fn signal_handler(mut signals: SignalsInfo, sigusr1: Flag, sigint: Flag) {
     for sig in signals.forever() {
         match sig {
-            SIGUSR1 => got_sigusr1.store(true, Ordering::Relaxed),
-            SIGINT => got_sigint.store(true, Ordering::Relaxed),
+            SIGUSR1 => sigusr1.store(true, Ordering::Relaxed),
+            SIGINT => sigint.store(true, Ordering::Relaxed),
             _ => ()
         } 
     }
@@ -23,18 +24,18 @@ fn main() -> Result<(), Error> {
     args.resolve();
 
     // Set up signal handling and atomic states
-    let got_sigusr1: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
-    let got_sigint: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
-    let got_sigusr1c: Arc<AtomicBool> = Arc::clone(&got_sigusr1);
-    let got_sigintc: Arc<AtomicBool> = Arc::clone(&got_sigint);
+    let got_sigusr1: Flag = Arc::new(AtomicBool::new(false));
+    let got_sigint: Flag = Arc::new(AtomicBool::new(false));
+    let got_sigusr1c: Flag = Arc::clone(&got_sigusr1);
+    let got_sigintc: Flag = Arc::clone(&got_sigint);
 
     // Spawn signal handler thread
     let signals = Signals::new(&[SIGINT, SIGUSR1])?;
     thread::spawn(move || signal_handler(signals, got_sigusr1c, got_sigintc));
 
     // Set up input, output and read buffer
-    let mut input = Input::open(args.get_if_path())?;
-    let mut output = Output::open(args.get_of_path())?;
+    let mut input = GenericInput::open(args.get_if_path())?;
+    let mut output = GenericOutput::open(args.get_of_path())?;
     let mut buffer: Vec<u8> = vec![0; args.get_ibs()];
 
     // Skip over the offset requested in the program arguments in the input
@@ -60,8 +61,8 @@ fn main() -> Result<(), Error> {
     };
 
     let mut metrics = Metrics::init(args.get_ibs(), args.get_obs());
-    let mut block_counter = 0;
-    let result = loop {
+    let mut block_counter: usize = 0;
+    let result: MetricsSnapshot = loop {
         let bytes_read = input.read(&mut buffer)?;
         if should_exit(block_counter, bytes_read) || got_sigint.load(Ordering::Relaxed) {
             break metrics.get_snapshot();

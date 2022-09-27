@@ -4,12 +4,12 @@ use std::{io, fs};
 // Publicly use Read so Trait Impl is automatically included
 pub use std::io::{Read, Seek};
 
-pub enum Input {
+pub enum GenericInput {
     Stdin(io::Stdin),
     File(fs::File)
 }
 
-impl Input {
+impl GenericInput {
     pub fn open(path: &Option<PathBuf>) -> Result<Self, io::Error> {
         match path {
             Some(path_buf) => Ok(Self::File(fs::File::open(path_buf)?)),
@@ -18,7 +18,7 @@ impl Input {
     }
 }
 
-impl Read for Input {
+impl Read for GenericInput {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self {
             Self::Stdin(s) => s.read(buf),
@@ -27,7 +27,7 @@ impl Read for Input {
     }
 }
 
-impl Seek for Input {
+impl Seek for GenericInput {
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
         match self {
             Self::Stdin(_) => Ok(0),

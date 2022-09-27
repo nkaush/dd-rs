@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use std::{io, fs};
 
-pub enum Output {
+pub enum GenericOutput {
     Stdout(io::Stdout),
     File(fs::File)
 }
 
-impl Output {
+impl GenericOutput {
     pub fn open(path: &Option<PathBuf>) -> Result<Self, io::Error> {
         match path {
             Some(path_buf) => {
@@ -24,7 +24,7 @@ impl Output {
     }
 }
 
-impl io::Write for Output {
+impl io::Write for GenericOutput {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         match self {
             Self::Stdout(s) => s.write(buf),
@@ -40,7 +40,7 @@ impl io::Write for Output {
     }
 }
 
-impl io::Seek for Output {
+impl io::Seek for GenericOutput {
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
         match self {
             Self::Stdout(_) => Ok(0),
