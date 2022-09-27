@@ -33,7 +33,6 @@ fn main() -> Result<(), Error> {
 
         metrics.block_in(num_read);
         output.write(&buffer[..num_read])?;
-        metrics.block_out(num_read);
 
         counter += 1;
     }
