@@ -37,11 +37,11 @@ pub struct Arguments {
 
    /// Skip SEEK obs-sized blocks at start of output
    #[clap(long, value_parser)]
-   seek: Option<u64>,
+   seek: Option<usize>,
 
    /// Skip SKIP ibs-sized blocks at start of input
    #[clap(long, value_parser)]
-   skip: Option<u64>
+   skip: Option<usize>
 }
 
 impl Arguments {
@@ -68,15 +68,15 @@ impl Arguments {
       self.obs
    }
 
-   pub fn get_count(&self) -> &Option<usize> {
-      &self.count
+   pub fn get_count(&self) -> Option<usize> {
+      self.count
    }
 
-   pub fn get_seek(&self) -> Option<u64> {
+   pub fn get_seek(&self) -> Option<usize> {
       self.seek
    }
 
-   pub fn get_skip(&self) -> Option<u64> {
+   pub fn get_skip(&self) -> Option<usize> {
       self.skip
    }
 }

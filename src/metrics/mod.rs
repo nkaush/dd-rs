@@ -9,7 +9,6 @@ pub struct Metrics {
     output_block_size: usize,
     bytes_copied: usize,
     start_time: Instant,
-    end_time: Instant
 }
 
 impl Metrics {
@@ -18,18 +17,13 @@ impl Metrics {
             input_block_size,
             output_block_size,
             bytes_copied: 0,
-            start_time: Instant::now(),
-            end_time: Instant::now()
+            start_time: Instant::now()
         }
     }
 
     #[inline(always)]
     pub fn block_in(&mut self, copied: usize) {
         self.bytes_copied += copied;
-    }
-
-    pub fn finished(&mut self) {
-        self.end_time = Instant::now();
     }
 
     pub fn get_snapshot(&self) -> MetricsSnapshot {

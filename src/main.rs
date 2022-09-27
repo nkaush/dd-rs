@@ -1,5 +1,5 @@
-use dd_rs::{Metrics, Arguments, Input, Output};
 use std::io::{Read, Seek, Write, SeekFrom, Error};
+use dd_rs::{Metrics, Arguments, Input, Output};
 use clap::Parser;
 
 fn main() -> Result<(), Error> {
@@ -10,34 +10,46 @@ fn main() -> Result<(), Error> {
     let mut output = Output::open(args.get_of_path())?;
     let mut buffer: Vec<u8> = vec![0; args.get_ibs()];
 
-    let mut metrics = Metrics::init(args.get_ibs(), args.get_obs());
-    let mut counter = 0;
-
-    let are_blocks_capped = args.get_count().is_some();
-    let max_blocks = args.get_count().unwrap_or_default();
-
     // Skip over the offset requested in the program arguments in the input source
-    if let Some(skip) = args.get_skip() {
-        input.seek(SeekFrom::Start(skip))?;
+    if let Some(blocks_skipped) = args.get_skip() {
+        let bytes_skipped = blocks_skipped * args.get_ibs();
+        input.seek(SeekFrom::Start(bytes_skipped as u64))?;
     }
 
-    if let Some(seek) = args.get_seek() {
-        output.seek(SeekFrom::Start(seek))?;
+    if let Some(blocks_seeked) = args.get_seek() {
+        let bytes_seeked = blocks_seeked * args.get_obs();
+        output.seek(SeekFrom::Start(bytes_seeked as u64))?;
     }
+    
+    let mut metrics = Metrics::init(args.get_ibs(), args.get_obs());
+    let result = match args.get_count() {
+        Some(max_blocks) => {
+            let mut block_counter = 0;
+            loop {
+                let bytes_read = input.read(&mut buffer)?;
+                if max_blocks == block_counter || bytes_read == 0 {
+                    break metrics.get_snapshot();
+                }
 
-    while let Ok(num_read) = input.read(&mut buffer) {
-        if num_read == 0 || (are_blocks_capped && max_blocks == counter) {
-            metrics.finished();
-            break;
+                metrics.block_in(bytes_read);
+                output.write(&buffer[..bytes_read])?;
+                block_counter += 1;
+            }
         }
+        None => {
+            loop {
+                let bytes_read = input.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break metrics.get_snapshot();
+                }
 
-        metrics.block_in(num_read);
-        output.write(&buffer[..num_read])?;
+                metrics.block_in(bytes_read);
+                output.write(&buffer[..bytes_read])?;
+            }
+        }
+    };
 
-        counter += 1;
-    }
-
-    println!("{}", metrics);
+    println!("{}", result);
 
     Ok(())
 }
