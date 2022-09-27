@@ -1,9 +1,7 @@
 mod metrics;
-mod output;
-mod input;
 mod args;
+mod io;
 
 pub use metrics::*;
-pub use output::*;
-pub use input::*;
 pub use args::*;
+pub use io::*;

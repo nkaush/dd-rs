@@ -1,9 +1,6 @@
 use std::path::PathBuf;
 use std::{io, fs};
 
-// Publicly use Read so Trait Impl is automatically included
-pub use std::io::{Read, Seek};
-
 pub enum GenericInput {
     Stdin(io::Stdin),
     File(fs::File)
@@ -18,7 +15,7 @@ impl GenericInput {
     }
 }
 
-impl Read for GenericInput {
+impl io::Read for GenericInput {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self {
             Self::Stdin(s) => s.read(buf),
@@ -27,7 +24,7 @@ impl Read for GenericInput {
     }
 }
 
-impl Seek for GenericInput {
+impl io::Seek for GenericInput {
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
         match self {
             Self::Stdin(_) => Ok(0),
