@@ -1,6 +1,4 @@
-use std::fs::{File, OpenOptions};
 use std::path::PathBuf;
-use std::io;
 use clap::Parser;
 
 // TODO: https://stackoverflow.com/questions/37223741/how-can-i-take-input-from-either-stdin-or-a-file-if-i-cannot-seek-stdin
@@ -39,15 +37,12 @@ pub struct Arguments {
 
    /// Skip SEEK obs-sized blocks at start of output
    #[clap(long, value_parser)]
-   seek: Option<usize>,
+   seek: Option<u64>,
 
    /// Skip SKIP ibs-sized blocks at start of input
    #[clap(long, value_parser)]
-   skip: Option<usize>
+   skip: Option<u64>
 }
-
-type DDInput = dyn io::Read + 'static;
-type DDOutput = dyn io::Write + 'static;
 
 impl Arguments {
    pub fn resolve(&mut self) {
@@ -57,25 +52,12 @@ impl Arguments {
       }
    }
 
-   pub fn open_if(&self) -> Result<Box<DDInput>, io::Error> {
-      match self.r#if.as_ref() {
-         Some(path_buf) => Ok(Box::new(File::open(path_buf)?)),
-         None => return Ok(Box::new(io::stdin()))
-      }
+   pub fn get_if_path(&self) -> &Option<PathBuf> {
+      &self.r#if
    }
 
-   pub fn open_of(&self) -> Result<Box<DDOutput>, io::Error> {
-      match self.of.as_ref() {
-         Some(path_buf) => {
-            let f = OpenOptions::new()
-               .read(true)
-               .write(true)
-               .create(true)
-               .open(path_buf)?;
-            Ok(Box::new(f))
-         },
-         None => return Ok(Box::new(io::stdout()))
-      }
+   pub fn get_of_path(&self) -> &Option<PathBuf> {
+      &self.of
    }
 
    pub fn get_ibs(&self) -> usize {
@@ -88,5 +70,13 @@ impl Arguments {
 
    pub fn get_count(&self) -> &Option<usize> {
       &self.count
+   }
+
+   pub fn get_seek(&self) -> Option<u64> {
+      self.seek
+   }
+
+   pub fn get_skip(&self) -> Option<u64> {
+      self.skip
    }
 }

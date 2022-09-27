@@ -1,27 +1,32 @@
-mod args;
-mod metrics;
-
-use metrics::Metrics;
-use args::Arguments;
-
+use dd_rs::{Metrics, Arguments, Input, Output};
+use std::io::{Read, Seek, Write, SeekFrom, Error};
 use clap::Parser;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut prog_args = Arguments::parse();
-    prog_args.resolve();
+fn main() -> Result<(), Error> {
+    let mut args = Arguments::parse();
+    args.resolve();
 
-    let mut input = prog_args.open_if()?;
-    let mut output = prog_args.open_of()?;
-    let mut buffer: Vec<u8> = vec![0; prog_args.get_ibs()];
+    let mut input = Input::open(args.get_if_path())?;
+    let mut output = Output::open(args.get_of_path())?;
+    let mut buffer: Vec<u8> = vec![0; args.get_ibs()];
 
-    let mut metrics = Metrics::init(prog_args.get_ibs(), prog_args.get_obs());
+    let mut metrics = Metrics::init(args.get_ibs(), args.get_obs());
     let mut counter = 0;
 
-    let cap_blocks = prog_args.get_count().is_some();
-    let max_blocks = prog_args.get_count().unwrap_or_default();
+    let are_blocks_capped = args.get_count().is_some();
+    let max_blocks = args.get_count().unwrap_or_default();
+
+    // Skip over the offset requested in the program arguments in the input source
+    if let Some(skip) = args.get_skip() {
+        input.seek(SeekFrom::Start(skip))?;
+    }
+
+    if let Some(seek) = args.get_seek() {
+        output.seek(SeekFrom::Start(seek))?;
+    }
 
     while let Ok(num_read) = input.read(&mut buffer) {
-        if num_read == 0 || (cap_blocks && max_blocks == counter) {
+        if num_read == 0 || (are_blocks_capped && max_blocks == counter) {
             metrics.finished();
             break;
         }
