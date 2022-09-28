@@ -1,3 +1,4 @@
+mod builder;
 mod error;
 mod args;
 

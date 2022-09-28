@@ -1,13 +1,12 @@
-use std::env;
-
 use crate::Arguments;
+use std::env;
 
 pub fn print_version() {
     println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 }
 
 pub fn print_help() {
-    // TODO: https://doc.rust-lang.org/cargo/reference/environment-variables.html
+    // REFs: https://doc.rust-lang.org/cargo/reference/environment-variables.html
     print!("\x1b[1m\x1b[33m");
     print_version();
     print!("\x1b[0m");

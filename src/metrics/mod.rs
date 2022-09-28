@@ -2,7 +2,6 @@ mod snapshot;
 pub use snapshot::*;
 
 use std::time::Instant;
-use std::fmt;
 
 pub struct Metrics {
     input_block_size: usize,
@@ -35,12 +34,5 @@ impl Metrics {
             bytes_copied: self.bytes_copied,
             duration: Instant::now() - self.start_time
         }
-    }
-}
-
-impl fmt::Display for Metrics {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.get_snapshot())?;
-        Ok(())
     }
 }

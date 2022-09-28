@@ -2,7 +2,6 @@ use std::{env, fmt, error::Error};
 use ParseErrorKind::*;
 
 #[derive(Debug)]
-#[allow(dead_code)]
 pub enum ParseErrorKind {
     UnknownOperand,
     NoValueSpecified,
@@ -11,9 +10,7 @@ pub enum ParseErrorKind {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct ParseError {
-    kind: ParseErrorKind,
     description: String
 }
 
@@ -30,7 +27,6 @@ impl ParseError {
         let description = format!("{}: {}", program_name, reason);
 
         Self {
-            kind,
             description
         }
     } 
