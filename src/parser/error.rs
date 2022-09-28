@@ -1,11 +1,13 @@
 use std::{env, fmt, error::Error};
+use ParseErrorKind::*;
 
 #[derive(Debug)]
 #[allow(dead_code)]
 pub enum ParseErrorKind {
     UnknownOperand,
     NoValueSpecified,
-    InvalidNumericValue
+    InvalidNumericValue,
+    IllegalNumericValue
 }
 
 #[derive(Debug)]
@@ -15,14 +17,13 @@ pub struct ParseError {
     description: String
 }
 
-use ParseErrorKind::*;
-
 impl ParseError {
     pub(in crate::parser) fn new(kind: ParseErrorKind, key: &str) -> Self {
         let reason = match kind {
             UnknownOperand => format!("unknown operand {}", key),
             NoValueSpecified => format!("no value specified for {}", key),
-            InvalidNumericValue => format!("{}: invalid numeric value", key)
+            InvalidNumericValue => format!("{}: invalid numeric value", key),
+            IllegalNumericValue => format!("{}: illegal numeric value", key),
         };
 
         let program_name = env::args().nth(0).unwrap();

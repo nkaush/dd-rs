@@ -26,7 +26,6 @@ pub struct Arguments {
 
 #[derive(Default)]
 struct ArgsBuilder {
-    program_name: String,
     r#if: Option<PathBuf>,
     of: Option<PathBuf>,
     bs: Option<usize>,
@@ -92,10 +91,8 @@ impl Arguments {
 
     pub fn parse() -> Result<Self, ParseError> {
         let mut builder = ArgsBuilder::default();
-        let mut args_iter = env::args();
-        builder.program_name = args_iter.nth(0).unwrap();
 
-        for operand in args_iter {
+        for operand in env::args().skip(1) {
             let split: Vec<&str> = operand
                 .splitn(2, Self::ARG_DELIMITER)
                 .collect();

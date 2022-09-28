@@ -1,9 +1,8 @@
 use dd_rs::{Metrics, MetricsSnapshot, GenericInput, GenericOutput, Arguments};
+use std::io::{Read, Seek, Write, SeekFrom, BufReader, BufWriter};
 use std::sync::{Arc, atomic::AtomicBool, atomic::Ordering};
 use signal_hook::iterator::{Signals, SignalsInfo};
-use std::io::{Read, Seek, Write, SeekFrom};
 use signal_hook::consts::{SIGINT, SIGUSR1};
-use std::error::Error;
 use std::thread;
 
 type ExitCondition = Box<dyn Fn(usize, usize) -> bool>;
@@ -26,9 +25,8 @@ fn signal_handler(mut signals: SignalsInfo, sigusr1: Flag, sigint: Flag) {
     }
 }
 
-fn dd() -> Result<(), Box<dyn Error>> {
+fn dd() -> Result<(), Box<dyn std::error::Error>> {
     let args = Arguments::parse()?;
-    println!("{:?}", args);
 
     // Set up signal handling and atomic states
     let got_sigusr1: Flag = Arc::new(AtomicBool::new(false));
@@ -41,8 +39,12 @@ fn dd() -> Result<(), Box<dyn Error>> {
     thread::spawn(move || signal_handler(signals, got_sigusr1c, got_sigintc));
 
     // Set up input, output and read buffer
-    let mut input = GenericInput::open(args.get_if_path())?;
-    let mut output = GenericOutput::open(args.get_of_path())?;
+    let input = GenericInput::open(args.get_if_path())?;
+    let mut input = BufReader::new(input);
+
+    let output = GenericOutput::open(args.get_of_path())?;
+    let mut output = BufWriter::new(output);
+    
     let mut buffer: Vec<u8> = vec![0; args.get_ibs()];
 
     // Skip over the offset requested in the program arguments in the input
@@ -57,7 +59,7 @@ fn dd() -> Result<(), Box<dyn Error>> {
         output.seek(SeekFrom::Start(bytes_seeked as u64))?;
     }
     
-    // Define out exit condition depending if there is a max block limit
+    // Define our exit condition depending whether there is a max block limit
     let should_exit: ExitCondition = match args.get_count() {
         Some(max_blocks) => {
             Box::new(move |blocks_read: usize, bytes_read: usize| {
@@ -77,7 +79,7 @@ fn dd() -> Result<(), Box<dyn Error>> {
         
         if got_sigusr1.load(Ordering::Relaxed) {
             got_sigusr1.store(false, Ordering::Relaxed);
-            println!("{}", metrics.get_snapshot());
+            eprintln!("{}", metrics.get_snapshot());
         }
 
         metrics.block_in(bytes_read);
@@ -85,7 +87,7 @@ fn dd() -> Result<(), Box<dyn Error>> {
         block_counter += 1;
     };
 
-    println!("{}", result);
+    eprintln!("{}", result);
 
     Ok(())
 }
