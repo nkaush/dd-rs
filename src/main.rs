@@ -3,7 +3,7 @@ use std::io::{Read, Seek, Write, SeekFrom, BufReader, BufWriter};
 use std::sync::{Arc, atomic::AtomicBool, atomic::Ordering};
 use signal_hook::iterator::{Signals, SignalsInfo};
 use signal_hook::consts::{SIGINT, SIGUSR1};
-use std::thread;
+use std::{process, thread};
 
 type ExitCondition = Box<dyn Fn(usize, usize) -> bool>;
 type Flag = Arc<AtomicBool>;
@@ -11,7 +11,7 @@ type Flag = Arc<AtomicBool>;
 fn main() {
     if let Err(e) = dd() {
         eprintln!("{}", e);
-        std::process::exit(1);
+        process::exit(1);
     }
 }
 
@@ -27,6 +27,14 @@ fn signal_handler(mut signals: SignalsInfo, sigusr1: Flag, sigint: Flag) {
 
 fn dd() -> Result<(), Box<dyn std::error::Error>> {
     let args = Arguments::parse()?;
+
+    if args.help_requested() {
+        dd_rs::print_help();
+        process::exit(0);
+    } else if args.version_requested() {
+        dd_rs::print_version();
+        process::exit(0);
+    }
 
     // Set up signal handling and atomic states
     let got_sigusr1: Flag = Arc::new(AtomicBool::new(false));

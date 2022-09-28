@@ -3,6 +3,8 @@ name = "dd-rs"
 version = "0.1.0"
 edition = "2021"
 authors = ["Neil Kaushikkar <neil.kaushikkar@gmail.com>"]
+description = "A Rust implementation of the Linux dd utility."
+repository = "https://github.com/nkaush/dd-rs/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

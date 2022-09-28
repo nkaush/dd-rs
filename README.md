@@ -4,23 +4,27 @@ A Rust implementation of the Linux dd utility.
 ## Usage
 
 ```
-dd 0.1.0
-Neil Kaushikkar <neil.kaushikkar@gmail.com>
+dd-rs 0.1.0
 A Rust implementation of the Linux dd utility.
 
+Author: Neil Kaushikkar <neil.kaushikkar@gmail.com>
+Source: https://github.com/nkaush/dd-rs/
+
 USAGE:
-    dd-rs [OPTIONS]
+        ./dd-rs [OPERAND] ...
+        ./dd-rs [OPTION]
+
+OPERANDS:
+        bs=BYTES        Read and write up to BYTES bytes at a time; overrides ibs and obs [default: 512]
+        ibs=BYTES       Read up to BYTES bytes at a time [default: 512]
+        obs=BYTES       Write BYTES bytes at a time [default: 512]
+        count=N         Copy only N input blocks
+        if=FILE         Read from FILE instead of stdin
+        of=FILE         Write to FILE instead of stdout
+        seek=N          Skip N obs-sized blocks at start of output
+        skip=N          Skip N ibs-sized blocks at start of input
 
 OPTIONS:
-        --bs <BS>          Read and write up to BS bytes at a time; overrides ibs and obs [default:
-                           512]
-        --count <COUNT>    Copy only COUNT input blocks
-    -h, --help             Print help information
-        --ibs <IBS>        Read up to IBS bytes at a time [default: 512]
-        --if <IF>          Read from IF instead of stdin
-        --obs <OBS>        Write OBS bytes at a time [default: 512]
-        --of <OF>          Write to OF instead of stdout
-        --seek <SEEK>      Skip SEEK obs-sized blocks at start of output
-        --skip <SKIP>      Skip SKIP ibs-sized blocks at start of input
-    -V, --version          Print version information
+        -h, --help      Print help information
+        -V, --version   Print version information
 ```

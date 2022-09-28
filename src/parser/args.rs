@@ -21,7 +21,9 @@ pub struct Arguments {
     /// Skip SEEK obs-sized blocks at start of output
     seek: Option<usize>,
     /// Skip SKIP ibs-sized blocks at start of input
-    skip: Option<usize>
+    skip: Option<usize>,
+    print_help: bool,
+    print_version: bool
 }
 
 #[derive(Default)]
@@ -33,7 +35,9 @@ struct ArgsBuilder {
     obs: Option<usize>,
     count: Option<usize>,
     seek: Option<usize>,
-    skip: Option<usize>
+    skip: Option<usize>,
+    print_help: bool,
+    print_version: bool
 }
 
 impl ArgsBuilder {
@@ -48,15 +52,21 @@ impl ArgsBuilder {
             "seek"  => self.seek  = Some(as_int_res?),
             "skip"  => self.skip  = Some(as_int_res?),
             "count" => self.count = Some(as_int_res?),
-            _ => return Err(ParseError::new(UnknownOperand, key)),
+            _       => return Err(ParseError::new(UnknownOperand, key)),
         }
 
         Ok(())
     }
 
     #[allow(dead_code, unused_variables)]
-    fn parse_flag(&mut self, flag: &str) {
-        todo!();
+    fn parse_flag(&mut self, flag: &str) -> Result<(), ParseError> {
+        match flag {
+            "--help" | "-h"    => self.print_help = true,
+            "--version" | "-V" => self.print_version = true,
+            _                  => return Err(ParseError::new(UnknownOperand, flag))
+        }
+
+        Ok(())
     }
 
     fn collect(mut self) -> Arguments {
@@ -73,7 +83,9 @@ impl ArgsBuilder {
             obs: self.obs.unwrap_or(Arguments::DEFAULT_BS),
             count: self.count,
             seek: self.seek,
-            skip: self.skip
+            skip: self.skip,
+            print_help: self.print_help,
+            print_version: self.print_version
         }
     }
 }
@@ -87,7 +99,7 @@ fn try_to_int<T: FromStr>(k: &str, v: &str) -> Result<T, ParseError> {
 
 impl Arguments {
     const ARG_DELIMITER: char = '=';
-    const DEFAULT_BS: usize = 512;
+    pub const DEFAULT_BS: usize = 512;
 
     pub fn parse() -> Result<Self, ParseError> {
         let mut builder = ArgsBuilder::default();
@@ -97,14 +109,12 @@ impl Arguments {
                 .splitn(2, Self::ARG_DELIMITER)
                 .collect();
 
-            let (key, value): (&str, &str) = match split[..] {
-                [k] => return Err(ParseError::new(UnknownOperand, k)),
+            match split[..] {
+                [k] => builder.parse_flag(k)?,
                 [k, ""] => return Err(ParseError::new(NoValueSpecified, k)),
-                [k, v] => (k, v),
+                [k, v] => builder.parse_kvp(k, v)?,
                 _ => return Err(ParseError::new(UnknownOperand, ""))
             };
-
-            builder.parse_kvp(key, value)?;
         }
 
         Ok(builder.collect())
@@ -136,5 +146,13 @@ impl Arguments {
 
     pub fn get_skip(&self) -> Option<usize> {
         self.skip
+    }
+
+    pub fn help_requested(&self) -> bool {
+        self.print_help
+    }
+
+    pub fn version_requested(&self) -> bool {
+        self.print_version
     }
 }
