@@ -1,7 +1,7 @@
 mod metrics;
-mod args;
+mod parser;
 mod io;
 
 pub use metrics::*;
-pub use args::*;
+pub use parser::*;
 pub use io::*;

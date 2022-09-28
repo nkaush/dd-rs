@@ -1,13 +1,20 @@
-use dd_rs::{Metrics, MetricsSnapshot, Arguments, GenericInput, GenericOutput};
+use dd_rs::{Metrics, MetricsSnapshot, GenericInput, GenericOutput, Arguments};
 use std::sync::{Arc, atomic::AtomicBool, atomic::Ordering};
-use std::io::{Read, Seek, Write, SeekFrom, Error};
 use signal_hook::iterator::{Signals, SignalsInfo};
+use std::io::{Read, Seek, Write, SeekFrom};
 use signal_hook::consts::{SIGINT, SIGUSR1};
-use clap::Parser;
+use std::error::Error;
 use std::thread;
 
 type ExitCondition = Box<dyn Fn(usize, usize) -> bool>;
 type Flag = Arc<AtomicBool>;
+
+fn main() {
+    if let Err(e) = dd() {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    }
+}
 
 fn signal_handler(mut signals: SignalsInfo, sigusr1: Flag, sigint: Flag) {
     for sig in signals.forever() {
@@ -19,9 +26,9 @@ fn signal_handler(mut signals: SignalsInfo, sigusr1: Flag, sigint: Flag) {
     }
 }
 
-fn main() -> Result<(), Error> {
-    let mut args = Arguments::parse();
-    args.resolve();
+fn dd() -> Result<(), Box<dyn Error>> {
+    let args = Arguments::parse()?;
+    println!("{:?}", args);
 
     // Set up signal handling and atomic states
     let got_sigusr1: Flag = Arc::new(AtomicBool::new(false));
